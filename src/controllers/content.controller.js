@@ -1,7 +1,7 @@
 const axios = require("axios");
 const NewsAPI = require("newsapi");
-const newsapi = new NewsAPI(process.env.NEWS_API_KEY);
 const User = require("../models/user.model");
+const newsapi = new NewsAPI(process.env.NEWS_API_KEY);
 
 exports.getPersonalizedContent = async (req, res) => {
   try {

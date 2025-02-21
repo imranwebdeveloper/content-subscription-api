@@ -9,6 +9,6 @@ const router = express.Router();
 
 router.get("/subscribed", authenticate, getPersonalizedContent);
 
-router.get("/recommended", getRecommendedContent);
+router.get("/recommended", authenticate, getRecommendedContent);
 
 module.exports = router;
