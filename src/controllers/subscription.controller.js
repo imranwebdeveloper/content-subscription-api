@@ -1,5 +1,5 @@
 const User = require("../models/user.model");
-const sendEmail = require("../services/email.service"); // For email notifications
+const sendEmail = require("../services/email.service");
 
 // Subscribe to categories
 exports.subscribe = async (req, res) => {
@@ -8,13 +8,17 @@ exports.subscribe = async (req, res) => {
     const userId = req.user.userId;
 
     if (!categories || !categories.length) {
-      return res
-        .status(400)
-        .json({ message: "Please provide categories to subscribe to." });
+      return res.status(400).json({
+        message: "Please provide categories to subscribe to.",
+        success: false,
+      });
     }
 
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user)
+      return res
+        .status(404)
+        .json({ message: "User not found", success: false });
 
     // Merge new categories with existing ones
     user.subscribedCategories = [
@@ -31,11 +35,14 @@ exports.subscribe = async (req, res) => {
     );
 
     res.json({
-      message: "Successfully subscribed",
-      subscribedCategories: user.subscribedCategories,
+      message: " Successfully subscribed",
+      success: true,
+      data: {
+        subscribedCategories: user.subscribedCategories,
+      },
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error, success: false });
   }
 };
 
@@ -46,13 +53,17 @@ exports.unsubscribe = async (req, res) => {
     const userId = req.user.userId;
 
     if (!categories || !categories.length) {
-      return res
-        .status(400)
-        .json({ message: "Please provide categories to unsubscribe from." });
+      return res.status(400).json({
+        message: "Please provide categories to unsubscribe from.",
+        success: false,
+      });
     }
 
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user)
+      return res
+        .status(404)
+        .json({ message: "User not found", success: false });
 
     // Remove selected categories
     user.subscribedCategories = user.subscribedCategories.filter(
@@ -63,10 +74,13 @@ exports.unsubscribe = async (req, res) => {
 
     res.json({
       message: "Successfully unsubscribed",
-      subscribedCategories: user.subscribedCategories,
+      success: true,
+      data: {
+        subscribedCategories: user.subscribedCategories,
+      },
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error, success: false });
   }
 };
 
@@ -76,10 +90,17 @@ exports.getSubscriptions = async (req, res) => {
     const userId = req.user.userId;
 
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user)
+      return res
+        .status(404)
+        .json({ message: "User not found", success: false });
 
-    res.json({ subscribedCategories: user.subscribedCategories });
+    res.json({
+      message: "Subscriptions fetched successfully",
+      success: true,
+      data: { subscribedCategories: user.subscribedCategories },
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error, success: false });
   }
 };
