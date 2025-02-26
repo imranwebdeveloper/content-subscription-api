@@ -1,0 +1,67 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for both Admins and Customers
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  tickets   Ticket[] @relation("CustomerTickets") // Tickets submitted by customers
+  ticketsAssigned Ticket[] @relation("AssignedTickets") // Tickets assigned to admins
+  replies   Reply[] // Relation to the replies made by this user
+}
+
+// Define user roles
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+// Ticket model with customer and assigned admin
+model Ticket {
+  id          Int          @id @default(autoincrement())
+  subject     String
+  description String
+  status      TicketStatus @default(OPEN)
+  customerId  Int
+  executiveId Int? // Admin assigned to the ticket
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  customer    User         @relation("CustomerTickets", fields: [customerId], references: [id])
+  executive   User?        @relation("AssignedTickets", fields: [executiveId], references: [id])
+  replies     Reply[] // Replies to the ticket
+}
+
+// Ticket statuses
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+// Replies to tickets
+model Reply {
+  id        Int      @id @default(autoincrement())
+  content   String  // The actual content of the reply
+  createdAt DateTime @default(now()) // When the reply was created
+  updatedAt DateTime @updatedAt // When the reply was last updated
+  ticketId  Int // Reference to the ticket
+  userId    Int // Reference to the user (customer or admin)
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+}
