@@ -1,6 +1,6 @@
-const User = require("../models/user.model");
+const bcrypt = require("bcryptjs");
 const { generateToken } = require("../config/auth");
-const { prisma } = require("../prisma");
+const prisma = require("../prisma");
 
 async function register(req, res) {
   // try {
@@ -26,6 +26,7 @@ async function register(req, res) {
 async function login(req, res) {
   try {
     const { email, password } = req.body;
+    console.log(email);
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
@@ -33,14 +34,15 @@ async function login(req, res) {
         .status(401)
         .json({ message: "Invalid credentials", success: false });
     }
-    const isPasswordValid = await user.comparePassword(password);
-    delete user.password;
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       return res
         .status(401)
         .json({ message: "Invalid credentials", success: false });
     }
+    delete user.password;
+
     const token = generateToken(user._id);
     res.json({
       data: {
