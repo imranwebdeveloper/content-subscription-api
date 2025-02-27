@@ -17,7 +17,6 @@ model User {
   role      Role     @default(CUSTOMER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
   tickets   Ticket[] @relation("CustomerTickets") // Tickets submitted by customers
   ticketsAssigned Ticket[] @relation("AssignedTickets") // Tickets assigned to admins
   replies   Reply[] // Relation to the replies made by this user
@@ -36,13 +35,12 @@ model Ticket {
   description String
   status      TicketStatus @default(OPEN)
   customerId  Int
-  executiveId Int? // Admin assigned to the ticket
+  executiveId Int? 
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-
   customer    User         @relation("CustomerTickets", fields: [customerId], references: [id])
   executive   User?        @relation("AssignedTickets", fields: [executiveId], references: [id])
-  replies     Reply[] // Replies to the ticket
+  replies     Reply[] 
 }
 
 // Ticket statuses

@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 
 const authRoutes = require("./routes/auth.routes");
-// const subscriptionRoutes = require("./routes/subscription.routes");
+const ticketsRoutes = require("./routes/ticket.routes");
 const errorHandler = require("./middleware/error.middleware");
 // const contentRoutes = require("./routes/content.routes");
 
@@ -15,7 +15,7 @@ app.use(cors());
 
 // Routes
 app.use("/api/auth", authRoutes);
-// app.use("/api/subscription", subscriptionRoutes);
+app.use("/api/tickets", ticketsRoutes);
 // app.use("/api/content", contentRoutes);
 
 // Default route

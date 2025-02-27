@@ -26,7 +26,6 @@ async function register(req, res) {
 async function login(req, res) {
   try {
     const { email, password } = req.body;
-    console.log(email);
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
@@ -43,7 +42,7 @@ async function login(req, res) {
     }
     delete user.password;
 
-    const token = generateToken(user._id);
+    const token = generateToken(user.id);
     res.json({
       data: {
         token,

@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   const hashedPassword = await bcrypt.hash("password", 10);
-  await prisma.user.upsert({
+  const admin = await prisma.user.upsert({
     where: { email: "admin@gmail.com.com" },
     update: {},
     create: {
@@ -16,7 +16,7 @@ async function main() {
       role: "ADMIN",
     },
   });
-  await prisma.user.upsert({
+  const customer = await prisma.user.upsert({
     where: { email: "customer@gmail.com" },
     update: {},
     create: {
@@ -28,6 +28,42 @@ async function main() {
   });
 
   console.log("Seed data added successfully!");
+
+  const ticket1 = await prisma.ticket.create({
+    data: {
+      subject: "Issue with login",
+      description: "I can't log into my account.",
+      status: "OPEN",
+      customerId: customer.id,
+    },
+  });
+
+  const ticket2 = await prisma.ticket.create({
+    data: {
+      subject: "Bug in checkout process",
+      description: "Customers can't complete orders.",
+      status: "IN_PROGRESS",
+      customerId: customer.id,
+      executiveId: admin.id,
+    },
+  });
+
+  // Create Replies
+  await prisma.reply.create({
+    data: {
+      content: "We are looking into this issue.",
+      ticketId: ticket1.id,
+      userId: admin.id,
+    },
+  });
+
+  await prisma.reply.create({
+    data: {
+      content: "Thank you! Please update me soon.",
+      ticketId: ticket1.id,
+      userId: customer.id,
+    },
+  });
 }
 
 main()
@@ -37,5 +73,4 @@ main()
   .catch(async (e) => {
     console.error(e);
     await prisma.$disconnect();
-    process.exit(1);
   });
