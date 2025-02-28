@@ -3,13 +3,12 @@ const prisma = require("../prisma");
 // Get all tickets (Customers see their own, Admins see all)
 exports.getTickets = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     let where = {};
 
     if (req.user.role === "CUSTOMER") {
       where = { customerId: userId };
     }
-
     const tickets = await prisma.ticket.findMany({
       where,
       include: { customer: true, executive: true, replies: true },
@@ -57,6 +56,13 @@ exports.createTicket = async (req, res) => {
   try {
     const { subject, description } = req.body;
 
+    if (req.user.role !== "CUSTOMER") {
+      return res.status(403).json({
+        message: "Only customers can create tickets",
+        success: false,
+      });
+    }
+
     if (!subject || !description) {
       return res.status(400).json({
         message: "Subject and description are required",
@@ -89,15 +95,25 @@ exports.createTicket = async (req, res) => {
   }
 };
 
-// Update a ticket (only Admins can update status or assign executives)
 exports.updateTicket = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, executiveId } = req.body;
-
+    const { role } = req.user;
+    const { status, subject, description, reply } = req.body;
     let data = {};
-    if (status) data.status = status;
-    if (executiveId) data.executiveId = Number(executiveId);
+
+    if (role === "ADMIN" && status) {
+      data.status = status;
+    } else {
+      data.subject = subject;
+      data.description = description;
+    }
+
+    if (role === "ADMIN" && reply) {
+      await prisma.reply.create({
+        data: { ticketId: Number(id), content: reply, userId: req?.user?.id },
+      });
+    }
 
     const ticket = await prisma.ticket.update({
       where: { id: Number(id) },
@@ -118,9 +134,9 @@ exports.updateTicket = async (req, res) => {
 exports.deleteTicket = async (req, res) => {
   try {
     const { id } = req.params;
-
     const ticket = await prisma.ticket.findUnique({
       where: { id: Number(id) },
+      include: { replies: true },
     });
 
     if (!ticket) {
@@ -129,14 +145,17 @@ exports.deleteTicket = async (req, res) => {
         .json({ message: "Ticket not found", success: false });
     }
 
-    if (req.user.role === "CUSTOMER" && ticket.customerId !== req.user.userId) {
-      return res.status(403).json({ message: "Unauthorized", success: false });
-    }
+    // Delete all related replies first
+    await prisma.reply.deleteMany({
+      where: { ticketId: Number(id) },
+    });
 
+    // Now delete the ticket
     await prisma.ticket.delete({ where: { id: Number(id) } });
 
     res.json({ message: "Ticket deleted successfully", success: true });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Server error", error, success: false });
   }
 };

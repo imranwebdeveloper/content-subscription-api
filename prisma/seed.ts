@@ -42,7 +42,7 @@ async function main() {
     data: {
       subject: "Bug in checkout process",
       description: "Customers can't complete orders.",
-      status: "IN_PROGRESS",
+      status: "CLOSED",
       customerId: customer.id,
       executiveId: admin.id,
     },
@@ -54,14 +54,6 @@ async function main() {
       content: "We are looking into this issue.",
       ticketId: ticket1.id,
       userId: admin.id,
-    },
-  });
-
-  await prisma.reply.create({
-    data: {
-      content: "Thank you! Please update me soon.",
-      ticketId: ticket1.id,
-      userId: customer.id,
     },
   });
 }
